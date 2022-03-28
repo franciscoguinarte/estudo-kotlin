@@ -15,5 +15,25 @@ fun main(args: Array<String>) {
         println("O quadrado de $i e ${i * i}")
     }
 
+    for (i in 1 until 10) { // Estrutura de repeticao for, com inicializacao, condicao, onde i vai de 1 ate 9
+        println("Numero: $i")
+        println("O quadrado de $i e ${i * i}")
+    }
+
+    // Estrutura de repeticao for, com inicializacao,
+    // condicao, passo, onde i vai de 1 ate 9 e passo 2
+    for (i in 1 until 10 step 2) {
+
+        if(i == 4){
+            continue
+        }
+        if (i == 5) {
+            break
+        }
+        println("Numero: $i")
+        println("O quadrado de $i e ${i * i}")
+    }
+
+
 }
 
