@@ -1,5 +1,7 @@
 package poo
 
+import poo.basico.Classe
+
 //Instancia dois objetos da classe Classe e imprime todos seus atributos
 fun main() {
 
