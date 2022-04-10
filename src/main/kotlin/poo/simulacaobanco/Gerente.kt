@@ -5,12 +5,14 @@ class Gerente(
     cpf: String,
     salario: Double,
     var bonus : Double
-):Funcionario(
+): Funcionario(
     nome = nome,
     cpf = cpf,
     salario = salario
 ) {
-    fun calculabonus ()  {
-        this.bonus = this.salario * 4
-    }
+    override val calculaBonus: Double
+        get() {
+            salario *= 1.1
+            return salario * 2
+        }
 }

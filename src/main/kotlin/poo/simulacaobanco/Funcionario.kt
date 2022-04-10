@@ -5,8 +5,6 @@ open class Funcionario(
     var cpf: String,
     var salario: Double
 ) {
-    fun calculaBonus(): Double {
-        salario *= 1.1
-        return salario * 0.10
-    }
+    open val calculaBonus: Double get() = this.salario * 1.1
+
 }
