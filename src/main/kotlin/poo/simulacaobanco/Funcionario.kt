@@ -1,8 +1,8 @@
 package poo.simulacaobanco
 
-class Funcionario(
+open class Funcionario(
     val nome: String,
-    val cpf: String,
+    var cpf: String,
     var salario: Double
 ) {
     fun calculaBonus(): Double {
