@@ -1,10 +1,11 @@
-package poo.simulacaobanco
-
 open class Funcionario(
     val nome: String,
-    var cpf: String,
-    var salario: Double
-) {
-    open val calculaBonus: Double get() = this.salario * 1.1
+    val cpf: String,
+    val salario: Double
+){
+    open val bonificacao: Double
+        get() {
+            return salario * 0.1
+        }
 
 }
