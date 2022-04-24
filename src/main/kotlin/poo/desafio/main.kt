@@ -1,5 +1,6 @@
 package poo.desafio
 
+import poo.simulacaobanco.ClassePessoa
 import java.util.Scanner
 
 fun main() {
@@ -14,6 +15,11 @@ fun main() {
     val valorTotalDHL = dhl.valorTotal(quilometros)
     val valorTotalFedEx = fedex.valorTotal(quilometros)
 
+
+    val pessoa = ClassePessoa("CPF", "NOME")
+    pessoa.Nome = "teste"
+
+    println("pessoa " + pessoa.CPF)
 
     val vantagem =
         if (valorTotalDHL > valorTotalFedEx) "Vantagem de DHL por oferecer valor de $valorTotalDHL menor que $valorTotalFedEx"
