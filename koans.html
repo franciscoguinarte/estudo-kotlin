@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kotlin koans — meios de pagamento</title>
+<style>
+  :root {
+    --bg: #14161a;
+    --panel: #1b1e24;
+    --panel-hover: #21252c;
+    --border: #2a2e36;
+    --border-strong: #383e48;
+    --text: #e4e6eb;
+    --text-dim: #9aa0ac;
+    --text-faint: #5c6270;
+    --accent: #4fd1a5;
+    --accent-dim: #2c7a5c;
+    --amber: #e0a94f;
+    --mono: "SF Mono", "Consolas", "Menlo", monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    margin: 0;
+    padding: 32px 20px 60px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    font-family: var(--mono);
+  }
+  .top h1 { font-size: 15px; font-weight: 500; margin: 0; letter-spacing: 0.2px; }
+  .top .path { color: var(--text-faint); font-size: 12px; }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin: 20px 0 6px;
+  }
+  .tab {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--text-dim);
+    cursor: pointer;
+    position: relative;
+  }
+  .tab .n { display: block; font-size: 10px; color: var(--text-faint); margin-bottom: 2px; }
+  .tab.active { border-color: var(--accent-dim); color: var(--accent); background: #1a2622; }
+  .tab.locked { opacity: 0.45; cursor: not-allowed; }
+  .tab .lock-icon { font-size: 10px; margin-left: 4px; }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
+
+  .lock-notice {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--amber);
+    background: #2a2418;
+    border: 1px solid #4a3f22;
+    border-radius: 6px;
+    padding: 14px 16px;
+    line-height: 1.7;
+  }
+  .lock-notice button {
+    margin-top: 8px;
+    background: none;
+    border: 1px solid #4a3f22;
+    color: var(--amber);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .lock-notice button:hover { border-color: var(--amber); }
+
+  .item { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; background: var(--panel); overflow: hidden; }
+  .item.done { border-color: var(--accent-dim); }
+  .row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .row:hover { background: var(--panel-hover); }
+  .checkbox { font-family: var(--mono); font-size: 14px; color: var(--text-faint); flex-shrink: 0; width: 20px; padding-top: 1px; }
+  .item.done .checkbox { color: var(--accent); }
+  .row-main { flex: 1; min-width: 0; }
+  .row-title { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); display: flex; align-items: baseline; gap: 10px; }
+  .item.done .row-title { color: var(--text-dim); }
+  .row-title .num { color: var(--text-faint); font-weight: 400; }
+  .chev { color: var(--text-faint); font-size: 11px; flex-shrink: 0; margin-top: 3px; transition: transform 0.15s ease; }
+  .chev.open { transform: rotate(90deg); }
+
+  .detail { display: none; padding: 0 16px 16px 48px; border-top: 1px solid var(--border); }
+  .detail.open { display: block; }
+  .detail-block { margin-top: 14px; }
+  .detail-label { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); margin-bottom: 5px; }
+  .detail-text { font-size: 13px; line-height: 1.65; color: var(--text-dim); margin: 0; }
+
+  .code-block { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; overflow-x: auto; margin: 0; }
+  .code-block code { font-family: var(--mono); font-size: 12px; line-height: 1.6; color: #b8e6cf; white-space: pre; }
+  .code-block.solution { border-color: var(--accent-dim); }
+
+  textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-family: var(--mono); font-size: 12.5px; padding: 8px 10px;
+    resize: vertical; min-height: 70px; margin-top: 4px; line-height: 1.6;
+  }
+  textarea:focus { outline: none; border-color: var(--accent-dim); }
+  textarea::placeholder { color: var(--text-faint); font-family: var(--sans); }
+
+  .reveal-btn {
+    background: none; border: 1px solid var(--border-strong); color: var(--text-dim);
+    font-family: var(--mono); font-size: 11.5px; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 8px;
+  }
+  .reveal-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  .footer-note { margin-top: 24px; font-size: 12px; color: var(--text-faint); font-family: var(--mono); text-align: center; }
+  .reset-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-faint);
+    font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--border-strong); color: var(--text-dim); }
+  *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .chev, .bar-fill { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>kotlin.koans</h1>
+    <span class="path">fundamentos → poo → design patterns</span>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="progress-row">
+    <span id="progress-label">0 / 0</span>
+    <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+    <button class="reset-btn" id="reset-btn">reset</button>
+  </div>
+
+  <div id="lock-area"></div>
+  <div id="list"></div>
+
+  <div class="footer-note">progresso e código salvos automaticamente neste artifact</div>
+</div>
+
+<script>
+const modules = [
+  { id: 1, name: "Fundamentos", threshold: 0 },
+  { id: 2, name: "POO em Kotlin", threshold: 0.6 },
+  { id: 3, name: "Design patterns", threshold: 0.6 }
+];
+
+const exercises = [
+  // ---------- MODULO 1: FUNDAMENTOS ----------
+  {
+    id: "m1-val-var", module: 1, title: "val vs var",
+    statement: "Em Java tudo é mutável por padrão. Em Kotlin, declare uma constante chamada nsu com o valor \"20240710001\" — algo que não pode ser reatribuído depois.",
+    starter: "___ nsu = \"20240710001\"",
+    solution: "val nsu = \"20240710001\"",
+    explanation: "val = read-only, equivalente a 'final' em Java. var = mutável. Comece sempre com val e só troque pra var quando o compilador reclamar que precisa reatribuir — isso evita boa parte dos bugs de estado mutável."
+  },
+  {
+    id: "m1-null-safety", module: 1, title: "Null safety",
+    statement: "Esta função não compila em Kotlin porque emissor pode ser nulo:\nfun tamanho(emissor: String?): Int = emissor.length\nCorrija usando o operador de chamada segura e um valor padrão 0 quando for nulo.",
+    starter: "fun tamanho(emissor: String?): Int = emissor.length // não compila",
+    solution: "fun tamanho(emissor: String?): Int = emissor?.length ?: 0",
+    explanation: "?. (safe call) retorna null em vez de lançar NullPointerException se o valor for nulo. ?: (elvis operator) dá um valor padrão quando o resultado é null. Isso substitui os if (x != null) espalhados que você escreveria em Java."
+  },
+  {
+    id: "m1-string-template", module: 1, title: "String templates",
+    statement: "Dado val nsu = \"123456\" e val valor = 100.50, monte a string \"NSU 123456 - R$100.5\" sem usar concatenação com +.",
+    starter: "val nsu = \"123456\"\nval valor = 100.50\nval texto = ___",
+    solution: "val texto = \"NSU $nsu - R$$valor\"",
+    explanation: "$variavel insere o valor direto na string. O truque aqui é R$$valor: o primeiro $ não é seguido de um identificador válido (o próximo caractere é outro $), então Kotlin trata como texto literal 'R$', e o segundo $ inicia a interpolação de valor. Resultado: 'R$100.5'."
+  },
+  {
+    id: "m1-when", module: 1, title: "when (substitui o switch)",
+    statement: "Escreva uma função nomeMti(codigo: String) que retorna o nome do tipo de mensagem: \"0200\" -> \"Autorização\", \"0400\" -> \"Reversão\", \"0800\" -> \"Network management\", qualquer outro -> \"Desconhecido\".",
+    starter: "fun nomeMti(codigo: String): String {\n    // TODO\n}",
+    solution: "fun nomeMti(codigo: String): String = when (codigo) {\n    \"0200\" -> \"Autorização\"\n    \"0400\" -> \"Reversão\"\n    \"0800\" -> \"Network management\"\n    else -> \"Desconhecido\"\n}",
+    explanation: "when é o switch do Kotlin, mas é uma expressão (retorna valor direto) e não precisa de break — sem fallthrough acidental, que é uma fonte clássica de bug no switch do Java."
+  },
+  {
+    id: "m1-data-class", module: 1, title: "Data class",
+    statement: "Crie uma data class Transacao com três propriedades: nsu (String), valor (Double) e status (String). Sem escrever equals, hashCode, toString ou getters manualmente.",
+    starter: "class Transacao(nsu: String, valor: Double, status: String) // ajuste aqui",
+    solution: "data class Transacao(val nsu: String, val valor: Double, val status: String)",
+    explanation: "data class gera automaticamente equals/hashCode (comparação por valor, não por referência), toString legível, e copy() para criar uma cópia alterando só um campo — ex: transacao.copy(status = \"revertida\"). Isso elimina o boilerplate que em Java viria de Lombok ou de um record."
+  },
+  {
+    id: "m1-extension", module: 1, title: "Extension function",
+    statement: "Adicione uma função de extensão a String chamada isNsuValido() que retorna true se a string tiver exatamente 14 caracteres e todos forem dígitos.",
+    starter: "fun String.isNsuValido(): Boolean {\n    // TODO\n}",
+    solution: "fun String.isNsuValido(): Boolean = this.length == 14 && this.all { it.isDigit() }",
+    explanation: "Extension functions permitem adicionar métodos a uma classe que você não controla (como String, da própria linguagem) sem herdar dela nem usar uma classe utilitária estática (tipo StringUtils.isNsuValido(s) em Java). Uso: \"20240710001234\".isNsuValido()."
+  },
+  {
+    id: "m1-lambda-filter", module: 1, title: "Lambdas + filter",
+    statement: "Dada val transacoes: List<Transacao>, retorne apenas as transações com valor maior que 1000.0, usando filter (não um for manual).",
+    starter: "val altoValor = transacoes.___ { ___ }",
+    solution: "val altoValor = transacoes.filter { it.valor > 1000.0 }",
+    explanation: "it é o nome implícito do parâmetro quando a lambda tem só um argumento. filter percorre a lista e mantém só os itens onde a lambda retorna true — sem loop explícito, sem lista auxiliar criada manualmente."
+  },
+  {
+    id: "m1-map", module: 1, title: "map",
+    statement: "Dada a mesma lista de transações, extraia apenas os NSUs como uma List<String>, usando map.",
+    starter: "val nsus = transacoes.___ { ___ }",
+    solution: "val nsus = transacoes.map { it.nsu }",
+    explanation: "map transforma cada elemento da lista em outra coisa — aqui, de Transacao para String. filter escolhe elementos, map transforma elementos. Os dois se combinam: transacoes.filter { it.valor > 1000 }.map { it.nsu }."
+  },
+
+  // ---------- MODULO 2: POO EM KOTLIN ----------
+  {
+    id: "m2-primary-constructor", module: 2, title: "Construtor primário",
+    statement: "Crie uma classe Cartao com numero (String) e bandeira (String) direto no construtor primário — sem escrever um construtor separado nem os getters.",
+    starter: "class Cartao {\n    // ajuste para usar construtor primário\n}",
+    solution: "class Cartao(val numero: String, val bandeira: String)",
+    explanation: "Em Kotlin os parâmetros do construtor já viram propriedades da classe se marcados com val/var. Nada de campo privado + getter + construtor separado como em Java clássico."
+  },
+  {
+    id: "m2-open-class", module: 2, title: "Classes abertas para herança",
+    statement: "Por padrão, classes em Kotlin são final (não podem ser herdadas). Crie uma classe base ProcessadorPagamento que PODE ser herdada, com um método processar(valor: Double) que também pode ser sobrescrito. Depois crie uma subclasse ProcessadorPix que sobrescreve processar.",
+    starter: "class ProcessadorPagamento {\n    fun processar(valor: Double) { println(\"Processando $valor\") }\n}\n// falta: subclasse ProcessadorPix",
+    solution: "open class ProcessadorPagamento {\n    open fun processar(valor: Double) { println(\"Processando $valor\") }\n}\n\nclass ProcessadorPix : ProcessadorPagamento() {\n    override fun processar(valor: Double) { println(\"Pix: $valor\") }\n}",
+    explanation: "open na classe permite herança, open no método permite override — os dois são obrigatórios. Essa é uma diferença de filosofia real: Kotlin assume 'final por padrão', Java assume o contrário. Isso evita heranças acidentais em classes que não foram desenhadas pra isso."
+  },
+  {
+    id: "m2-interface-default", module: 2, title: "Interface com implementação padrão",
+    statement: "Crie uma interface Autorizavel com um método autorizar(valor: Double): Boolean que já vem com uma implementação padrão: aprova se valor <= 5000.0.",
+    starter: "interface Autorizavel {\n    // TODO\n}",
+    solution: "interface Autorizavel {\n    fun autorizar(valor: Double): Boolean = valor <= 5000.0\n}",
+    explanation: "Interfaces em Kotlin podem ter corpo de método (como default methods em Java 8+), mas com sintaxe mais direta. Uma classe que implementa Autorizavel ganha esse comportamento de graça e só sobrescreve se precisar de uma regra diferente."
+  },
+  {
+    id: "m2-object-singleton", module: 2, title: "object — singleton sem boilerplate",
+    statement: "Crie um singleton chamado ConfiguracaoPagamento com uma propriedade limiteDiario = 10000.0, sem escrever getInstance() nem construtor privado manualmente.",
+    starter: "class ConfiguracaoPagamento private constructor() {\n    companion object {\n        // implementação manual de singleton, tipo Java\n    }\n}",
+    solution: "object ConfiguracaoPagamento {\n    val limiteDiario = 10000.0\n}",
+    explanation: "A palavra-chave object cria um singleton verdadeiro na linguagem — uma única instância, thread-safe, sem precisar do padrão manual (construtor privado + getInstance() + campo estático) que você escreveria em Java."
+  },
+  {
+    id: "m2-sealed-class", module: 2, title: "Sealed class para resultados",
+    statement: "Modele os possíveis resultados de uma autorização com uma sealed class ResultadoAutorizacao com três variantes: Aprovada(codigoAutorizacao: String), Negada(motivo: String) e Erro(excecao: String).",
+    starter: "// TODO: sealed class ResultadoAutorizacao com 3 variantes",
+    solution: "sealed class ResultadoAutorizacao\ndata class Aprovada(val codigoAutorizacao: String) : ResultadoAutorizacao()\ndata class Negada(val motivo: String) : ResultadoAutorizacao()\ndata class Erro(val excecao: String) : ResultadoAutorizacao()",
+    explanation: "sealed class restringe as subclasses possíveis a um conjunto fechado, conhecido em tempo de compilação. Isso permite usar when sem 'else' — o compilador te obriga a tratar todos os casos, o que é ouro quando o resultado de uma autorização precisa ser tratado em vários lugares do código."
+  },
+  {
+    id: "m2-companion-factory", module: 2, title: "Companion object como factory",
+    statement: "Torne o construtor de Transacao privado e crie um método de fábrica criar(nsu: String) dentro de um companion object, como alternativa ao 'new' direto.",
+    starter: "class Transacao(val nsu: String)\n// torne o construtor privado e adicione um factory method",
+    solution: "class Transacao private constructor(val nsu: String) {\n    companion object {\n        fun criar(nsu: String): Transacao = Transacao(nsu)\n    }\n}",
+    explanation: "companion object é o mais próximo que Kotlin tem de 'static' do Java — mas é um objeto de verdade, associado à classe. Usado como factory method, permite validar ou transformar argumentos antes de criar a instância, sem expor o construtor bruto."
+  },
+
+  // ---------- MODULO 3: DESIGN PATTERNS + MEIOS DE PAGAMENTO ----------
+  {
+    id: "m3-strategy", module: 3, title: "Strategy: regras de autorização por emissor",
+    statement: "Implemente o padrão Strategy para regras de autorização: uma fun interface RegraAutorizacao com autorizar(tx: Transacao): Boolean, e duas implementações via lambda — regraTricard (aprova se valor <= limite) e regraBanpara (aprova se valor <= limite * 0.9).",
+    starter: "// TODO: fun interface RegraAutorizacao\n// TODO: regraTricard e regraBanpara como lambdas",
+    solution: "fun interface RegraAutorizacao { fun autorizar(tx: Transacao): Boolean }\n\nval regraTricard = RegraAutorizacao { tx -> tx.valor <= tx.limite }\nval regraBanpara = RegraAutorizacao { tx -> tx.valor <= tx.limite * 0.9 }\n\nfun autorizar(tx: Transacao, regra: RegraAutorizacao) = regra.autorizar(tx)",
+    explanation: "fun interface (SAM interface) permite usar uma lambda no lugar de uma classe inteira implementando a interface. Isso é Strategy sem a cerimônia do GoF original: cada regra de emissor é só uma lambda, fácil de testar isoladamente."
+  },
+  {
+    id: "m3-state", module: 3, title: "State: ciclo de vida da transação",
+    statement: "Modele o ciclo de vida de uma transação com sealed class EstadoTransacao (Autorizada, Capturada, Conciliada, Revertida) e uma função proximoEstado que avança de um estado pro próximo, lançando erro se já estiver em Revertida (estado final).",
+    starter: "// TODO: sealed class EstadoTransacao\n// TODO: fun proximoEstado(atual: EstadoTransacao): EstadoTransacao",
+    solution: "sealed class EstadoTransacao {\n    object Autorizada : EstadoTransacao()\n    object Capturada : EstadoTransacao()\n    object Conciliada : EstadoTransacao()\n    object Revertida : EstadoTransacao()\n}\n\nfun proximoEstado(atual: EstadoTransacao): EstadoTransacao = when (atual) {\n    is EstadoTransacao.Autorizada -> EstadoTransacao.Capturada\n    is EstadoTransacao.Capturada -> EstadoTransacao.Conciliada\n    is EstadoTransacao.Conciliada -> EstadoTransacao.Revertida\n    is EstadoTransacao.Revertida -> error(\"Estado final, sem transição\")\n}",
+    explanation: "sealed class + when exaustivo é o State pattern em Kotlin: cada estado é um objeto (singleton, já que não carrega dados), e a transição é uma função pura. O compilador avisa se você esquecer de tratar um estado novo no when."
+  },
+  {
+    id: "m3-observer", module: 3, title: "Observer: notificar múltiplos consumidores",
+    statement: "Usando um MutableSharedFlow<Transacao> chamado autorizacoes, escreva o código para dois coletores independentes reagirem à mesma emissão: um chamando conciliar(tx) e outro notificarPortador(tx). Depois, emita uma transação aprovada.",
+    starter: "val autorizacoes = MutableSharedFlow<Transacao>()\n// TODO: dois collectors + emit",
+    solution: "val autorizacoes = MutableSharedFlow<Transacao>()\n\nscope.launch { autorizacoes.collect { tx -> conciliar(tx) } }\nscope.launch { autorizacoes.collect { tx -> notificarPortador(tx) } }\n\nautorizacoes.emit(transacaoAprovada)",
+    explanation: "SharedFlow é um Observer pronto na biblioteca padrão: emit() notifica todos os collectors ativos, sem o emissor conhecer quem está ouvindo. Em produção, Kafka resolve o mesmo problema numa escala distribuída — o princípio é idêntico."
+  },
+  {
+    id: "m3-command", module: 3, title: "Command: reversão com retry",
+    statement: "Crie uma data class ReversaoCommand(idTransacao: String) com um método executar() que chama revisor.reverter(idTransacao). Depois, processe uma fila (ArrayDeque) de comandos, reenfileirando no final quem falhar.",
+    starter: "data class ReversaoCommand(val idTransacao: String) {\n    // TODO: executar()\n}\n// TODO: processar fila com retry",
+    solution: "data class ReversaoCommand(val idTransacao: String) {\n    fun executar() = revisor.reverter(idTransacao)\n}\n\nval fila = ArrayDeque<ReversaoCommand>()\nfila.add(ReversaoCommand(\"2024071000123456\"))\n\nfila.forEach { comando ->\n    runCatching { comando.executar() }\n        .onFailure { fila.addLast(comando) }\n}",
+    explanation: "Command encapsula a ação como dado — aqui, o idTransacao vira parte do objeto, permitindo guardar, logar ou reenfileirar a operação. runCatching é o jeito idiomático em Kotlin de tratar exceção como valor (Result), em vez de try/catch aninhado."
+  },
+  {
+    id: "m3-chain", module: 3, title: "Chain of Responsibility: validação ISO 8583",
+    statement: "Crie uma fun interface Validador com validar(msg: MensagemIso8583): Boolean, uma lista de 3 validadores (bitmap, campos obrigatórios, MAC) e uma função processar que só aprova se TODOS passarem.",
+    starter: "// TODO: fun interface Validador\n// TODO: lista 'cadeia' com 3 validadores\n// TODO: fun processar(msg): Boolean",
+    solution: "fun interface Validador { fun validar(msg: MensagemIso8583): Boolean }\n\nval cadeia = listOf<Validador>(\n    Validador { it.bitmapValido() },\n    Validador { it.camposObrigatoriosPresentes() },\n    Validador { it.macValido() }\n)\n\nfun processar(msg: MensagemIso8583) = cadeia.all { it.validar(msg) }",
+    explanation: "listOf + all() substitui a corrente de objetos Handler encadeados do GoF clássico. all() já para na primeira validação que falhar (short-circuit), então o comportamento de 'interromper a cadeia' vem de graça da stdlib."
+  }
+];
+
+const STORAGE_KEY = 'kotlin-koans-progress';
+const UNLOCK_KEY = 'kotlin-koans-unlocks';
+let state = {};
+let unlocks = {};
+let activeModule = 1;
+
+async function loadState() {
+  try {
+    const r = await window.storage.get(STORAGE_KEY);
+    state = r ? JSON.parse(r.value) : {};
+  } catch (e) { state = {}; }
+  try {
+    const r2 = await window.storage.get(UNLOCK_KEY);
+    unlocks = r2 ? JSON.parse(r2.value) : {};
+  } catch (e) { unlocks = {}; }
+  render();
+}
+
+async function saveState() {
+  try { await window.storage.set(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.error('Falha ao salvar progresso', e); }
+}
+
+async function saveUnlocks() {
+  try { await window.storage.set(UNLOCK_KEY, JSON.stringify(unlocks)); }
+  catch (e) { console.error('Falha ao salvar unlocks', e); }
+}
+
+function moduleCompletion(moduleId) {
+  const items = exercises.filter(e => e.module === moduleId);
+  const done = items.filter(e => (state[e.id] || {}).done).length;
+  return items.length === 0 ? 0 : done / items.length;
+}
+
+function isModuleUnlocked(moduleId) {
+  if (moduleId === 1) return true;
+  if (unlocks[moduleId]) return true;
+  const mod = modules.find(m => m.id === moduleId);
+  const prev = modules.find(m => m.id === moduleId - 1);
+  return prev ? moduleCompletion(prev.id) >= mod.threshold : true;
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  modules.forEach(m => {
+    const unlocked = isModuleUnlocked(m.id);
+    const completion = Math.round(moduleCompletion(m.id) * 100);
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (m.id === activeModule ? ' active' : '') + (!unlocked ? ' locked' : '');
+    tab.innerHTML = `<span class="n">módulo ${m.id}</span>${m.name}${!unlocked ? '<span class="lock-icon">&#128274;</span>' : ` · ${completion}%`}`;
+    tab.onclick = () => {
+      if (!unlocked) {
+        activeModule = m.id;
+        render();
+        return;
+      }
+      activeModule = m.id;
+      render();
+    };
+    tabs.appendChild(tab);
+  });
+}
+
+function renderList() {
+  const lockArea = document.getElementById('lock-area');
+  const list = document.getElementById('list');
+  lockArea.innerHTML = '';
+  list.innerHTML = '';
+
+  const unlocked = isModuleUnlocked(activeModule);
+  const modInfo = modules.find(m => m.id === activeModule);
+
+  if (!unlocked) {
+    const prev = modules.find(m => m.id === activeModule - 1);
+    const pct = Math.round(moduleCompletion(prev.id) * 100);
+    const needed = Math.round(modInfo.threshold * 100);
+    const notice = document.createElement('div');
+    notice.className = 'lock-notice';
+    notice.innerHTML = `Este módulo é recomendado depois de concluir pelo menos ${needed}% de "${prev.name}" (você está em ${pct}%). Isso ajuda a construir a base antes de aplicar os conceitos.<br><button id="unlock-btn">quero acessar mesmo assim</button>`;
+    lockArea.appendChild(notice);
+    document.getElementById('unlock-btn').onclick = async () => {
+      unlocks[activeModule] = true;
+      await saveUnlocks();
+      render();
+    };
+    updateProgressBar();
+    return;
+  }
+
+  const items = exercises.filter(e => e.module === activeModule);
+  let doneCount = 0;
+
+  items.forEach((ex, idx) => {
+    const entry = state[ex.id] || { done: false, code: '', revealed: false };
+    if (entry.done) doneCount++;
+
+    const item = document.createElement('div');
+    item.className = 'item' + (entry.done ? ' done' : '');
+
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <span class="checkbox">${entry.done ? '[x]' : '[ ]'}</span>
+      <div class="row-main">
+        <div class="row-title"><span class="num">${String(idx + 1).padStart(2, '0')}</span>${ex.title}</div>
+      </div>
+      <span class="chev">&#9656;</span>
+    `;
+
+    const detail = document.createElement('div');
+    detail.className = 'detail';
+    detail.innerHTML = `
+      <div class="detail-block">
+        <div class="detail-label">exercício</div>
+        <p class="detail-text"></p>
+      </div>
+      ${ex.starter ? `<div class="detail-block">
+        <div class="detail-label">ponto de partida</div>
+        <pre class="code-block"><code></code></pre>
+      </div>` : ''}
+      <div class="detail-block">
+        <div class="detail-label">sua solução</div>
+        <textarea placeholder="escreva seu código kotlin aqui...">${entry.code || ''}</textarea>
+      </div>
+      <div class="detail-block">
+        <button class="reveal-btn">ver solução</button>
+        <div class="solution-area" style="display:${entry.revealed ? 'block' : 'none'}; margin-top: 10px;">
+          <div class="detail-label">solução de referência</div>
+          <pre class="code-block solution"><code></code></pre>
+          <div class="detail-label" style="margin-top:10px;">por quê</div>
+          <p class="detail-text"></p>
+        </div>
+      </div>
+    `;
+    detail.querySelector('.detail-text').textContent = ex.statement;
+    if (ex.starter) detail.querySelector('.code-block:not(.solution) code').textContent = ex.starter;
+    detail.querySelector('.code-block.solution code').textContent = ex.solution;
+    detail.querySelectorAll('.detail-text')[1] ? (detail.querySelectorAll('.detail-text')[1].textContent = ex.explanation) : null;
+
+    row.onclick = () => {
+      const isOpen = detail.classList.contains('open');
+      detail.classList.toggle('open', !isOpen);
+      row.querySelector('.chev').classList.toggle('open', !isOpen);
+    };
+
+    row.querySelector('.checkbox').onclick = async (e) => {
+      e.stopPropagation();
+      entry.done = !entry.done;
+      state[ex.id] = entry;
+      await saveState();
+      render();
+    };
+
+    const textarea = detail.querySelector('textarea');
+    textarea.onclick = (e) => e.stopPropagation();
+    let saveTimeout;
+    textarea.oninput = () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        entry.code = textarea.value;
+        state[ex.id] = entry;
+        await saveState();
+      }, 500);
+    };
+
+    const revealBtn = detail.querySelector('.reveal-btn');
+    revealBtn.onclick = async (e) => {
+      e.stopPropagation();
+      entry.revealed = !entry.revealed;
+      state[ex.id] = entry;
+      detail.querySelector('.solution-area').style.display = entry.revealed ? 'block' : 'none';
+      await saveState();
+    };
+
+    item.appendChild(row);
+    item.appendChild(detail);
+    list.appendChild(item);
+  });
+
+  updateProgressBar(doneCount, items.length);
+}
+
+function updateProgressBar(done, total) {
+  if (done === undefined) {
+    document.getElementById('progress-label').textContent = `módulo bloqueado`;
+    document.getElementById('bar-fill').style.width = `0%`;
+    return;
+  }
+  document.getElementById('progress-label').textContent = `${done} / ${total} concluídos`;
+  document.getElementById('bar-fill').style.width = `${total === 0 ? 0 : (done / total) * 100}%`;
+}
+
+function render() {
+  renderTabs();
+  renderList();
+}
+
+document.getElementById('reset-btn').onclick = async () => {
+  if (confirm('Zerar todo o progresso, código escrito e desbloqueios?')) {
+    state = {};
+    unlocks = {};
+    await saveState();
+    await saveUnlocks();
+    render();
+  }
+};
+
+loadState();
+</script>
+</body>
+</html>
